@@ -1,0 +1,33 @@
+# Use a lightweight Python image
+image: python:3.12-slim
+
+cache:
+  key: ${CI_COMMIT_REF_SLUG} # Reuses the cache for the same branch
+  paths:
+    - .cache/pip
+    - venv/
+
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+
+# Define the stages of the pipeline
+stages:
+  - deploy
+
+before_script:
+  - python -m venv venv
+  - source venv/bin/activate
+  
+# The job name must be 'pages' for GitLab to recognize it as a Pages site
+pages:
+  stage: deploy
+  script:
+    - pip install --upgrade pip
+    - pip install -r requirements.txt  # Installs mkdocs and themes
+    - mkdocs build --site-dir public   # Builds the site into the 'public' directory
+  artifacts:
+    paths:
+      - public                         # Tells GitLab where the static files are
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH  # Only run on the main/master branch
+

@@ -1,0 +1,7 @@
+site_name: Internal Cloud Docs
+theme:
+  name: material
+nav:
+  - Home: index.md                  # Maps to your site's root URL (/)
+  - Projects: project.md       # Maps to /setup/
+  - User Guides: guides.md                   # Creates a dropdown menu
