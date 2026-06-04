@@ -22,7 +22,7 @@ before_script:
 pages:
   stage: deploy
   tags:
-    - centos
+    - docker
   script:
     - pip install --upgrade pip
     - pip install -r requirements.txt  # Installs mkdocs and themes
