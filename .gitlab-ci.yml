@@ -21,6 +21,8 @@ before_script:
 # The job name must be 'pages' for GitLab to recognize it as a Pages site
 pages:
   stage: deploy
+  tags:
+    - centos
   script:
     - pip install --upgrade pip
     - pip install -r requirements.txt  # Installs mkdocs and themes
