@@ -1,6 +1,6 @@
 # Internal Project Documentation
 
-Welcome to the central hub for our team's internal cloud services and automation documentation. This site contains all the guides, reference material, and deployment procedures you need to interact with our systems.
+Welcome to the central hub for our team's internal cloud services and automation documentation. This site contains all the guides, reference material, and deployment procedures you need to interact with our systems. Hello
 
 ---
 
