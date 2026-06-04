@@ -30,6 +30,6 @@ pages:
   artifacts:
     paths:
       - public                         # Tells GitLab where the static files are
-  rules:
+  only:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH  # Only run on the main/master branch
 
