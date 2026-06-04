@@ -31,5 +31,5 @@ pages:
     paths:
       - public                         # Tells GitLab where the static files are
   only:
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH  # Only run on the main/master branch
+    - main # Only run on the main/master branch
 
