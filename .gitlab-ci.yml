@@ -24,8 +24,8 @@ pages:
   tags:
     - docker
   script:
-    - pip install --upgrade pip
-    - pip install -r requirements.txt  # Installs mkdocs and themes
+    # - pip install --upgrade pip
+    - pip install --no-cache-dir --no-index --find-links=/home/drdas/linux_packages_archive -r requirements.txt #- pip install -r requirements.txt  # Installs mkdocs and themes 
     - mkdocs build --site-dir public   # Builds the site into the 'public' directory
   artifacts:
     paths:
