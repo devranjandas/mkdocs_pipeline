@@ -1,35 +1,73 @@
-# Use a lightweight Python image
-image: dregistry.megh.barc.gov.in/python:3.12-slim
-
 cache:
-  key: ${CI_COMMIT_REF_SLUG} # Reuses the cache for the same branch
+  key: ${CI_COMMIT_REF_SLUG}
   paths:
     - .cache/pip
-    - venv/
 
 variables:
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+  DOCS_PORT: "8000"        # Port mkdocs serve listens on
+  SERVE_HOST: "0.0.0.0"   # Bind to all interfaces; use 127.0.0.1 for localhost-only
 
-# Define the stages of the pipeline
 stages:
+  - build
+  - test
   - deploy
 
-before_script:
-  - python -m venv venv
-  - source venv/bin/activate
-  
-# The job name must be 'pages' for GitLab to recognize it as a Pages site
-pages:
-  stage: deploy
+# Build the MkDocs site
+build:
+  stage: build
   tags:
-    - docker
+    - shell    # Must match your shell-executor runner tag
+  before_script:
+    - pip install --no-cache-dir -r requirements.txt
   script:
-    # - pip install --upgrade pip
-    - pip install --no-cache-dir --no-index --find-links=./linux_packages_archive -r requirements.txt #- pip install -r requirements.txt  # Installs mkdocs and themes 
-    - mkdocs build --site-dir public   # Builds the site into the 'public' directory
+    - mkdocs build --strict --site-dir public
   artifacts:
     paths:
-      - public                         # Tells GitLab where the static files are
-  only:
-    - main # Only run on the main/master branch
+      - public
+    expire_in: 1 hour
 
+# Validate internal links; failures warn but don't block deploy
+test:link-check:
+  stage: test
+  tags:
+    - shell
+  needs: [build]
+  before_script:
+    - pip install --no-cache-dir linkchecker
+  script:
+    - linkchecker --no-warnings --ignore-url="^mailto:" public/index.html
+  allow_failure: true
+
+# Deploy: restart the mkdocs serve process via systemd
+# Prerequisites on the runner machine:
+#   1. Create /etc/systemd/system/mkdocs.service (template below)
+#   2. Run: sudo systemctl enable mkdocs
+#   3. Grant the runner user passwordless sudo for systemctl restart mkdocs:
+#      echo "gitlab-runner ALL=(ALL) NOPASSWD: /bin/systemctl restart mkdocs" \
+#        | sudo tee /etc/sudoers.d/gitlab-runner-mkdocs
+#
+# /etc/systemd/system/mkdocs.service:
+# [Unit]
+# Description=MkDocs documentation server
+# After=network.target
+#
+# [Service]
+# Type=simple
+# User=gitlab-runner
+# WorkingDirectory=/path/to/your/repo          # <-- set to your repo path
+# ExecStart=/usr/local/bin/mkdocs serve --dev-addr 0.0.0.0:8000
+# Restart=on-failure
+#
+# [Install]
+# WantedBy=multi-user.target
+deploy:
+  stage: deploy
+  tags:
+    - shell
+  needs: [build]
+  script:
+    - sudo systemctl restart mkdocs
+    - echo "Docs live at http://$(hostname -I | awk '{print $1}'):${DOCS_PORT}"
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
